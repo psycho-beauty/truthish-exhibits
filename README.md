@@ -6,30 +6,47 @@ so you can change exhibits without re-uploading the world.
 
 ## Slots
 
-There are 24 slots. Each slot can have a 3D model, a photo, or both:
+There are 24 slots. Each one can hold a 3D model, a photo, or both:
 
 | File | What it is |
 | --- | --- |
-| `exhibit01.obj` … `exhibit24.obj` | 3D model, shown as a spinning hologram |
-| `exhibit01.jpg` … `exhibit24.jpg` | Photo. Used as the model's texture, or shown on its own if there's no model |
+| `exhibit01.tsh` … `exhibit24.tsh` | **Encrypted** 3D model, made by `truthish_exhibit.py`. Shown as a spinning hologram. |
+| `exhibit01.jpg` … `exhibit24.jpg` | For a `.tsh` model this is its texture, **scrambled**. On its own, it's shown as a plain photo. |
+| `exhibit01.obj` … `exhibit24.obj` | Optional plain OBJ, only for models you're free to share (e.g. your own scans). |
 
-- Names must be exactly like this: lowercase, two digits (`exhibit03.obj`, not `Exhibit3.OBJ`).
-- If a slot has neither file, the projector shows "SIGNAL LOST".
-- `exhibit24` holds a sample trophy you can use to test. Replace it whenever you like.
+- If a slot has none of these, the projector shows "SIGNAL LOST".
+- `exhibit24` is a sample trophy (plain OBJ). `exhibit01` is an encrypted test model.
+- Everything here is public, but `.tsh` models and their textures can only be decoded by the world.
+
+## Adding exhibits (recommended): `truthish_exhibit.py`
+
+The script lives in the world's Unity project at `Tools/truthish_exhibit.py`. Don't upload it here: it contains the decryption key.
+
+```
+python truthish_exhibit.py raccoon.fbx --slot 1        # any OBJ / FBX / glTF / GLB / Blend
+python truthish_exhibit.py photo.jpg --slot 2          # photo-only exhibit
+python truthish_exhibit.py --list                      # what's in each slot
+python truthish_exhibit.py --clear --slot 3            # empty a slot
+```
+
+It converts the model, simplifies it to 20,000 triangles if needed (using Blender), merges its textures, encrypts it, uploads it here, and removes any plain OBJ left in that slot.
+
+**One-time setup:**
+- Install Python 3 and run `pip install trimesh numpy pillow`.
+- Install Blender for FBX/Blend files and very detailed models.
+- The first upload asks for a GitHub token. Create a fine-grained token with access to only this repo and **Contents: Read and write**.
 
 ## Limits
 
-- **Models:** OBJ only, up to about **20,000 triangles**. Anything over 21,000 is cut off. Smaller loads faster.
-- **Photos:** JPG, **2048 × 2048 pixels or smaller**. Larger images fail to load.
-- No `.mtl` file is needed. Colour comes from the matching `.jpg`, if there is one.
-- Everything here is **public**. Only upload what contestants are happy to share.
+- Models: around **20,000 triangles** (the script simplifies bigger ones) and 65,000 vertices.
+- Photos and textures: the script resizes to **2048 px**.
+- Plain OBJ files: up to 21,000 triangles, texture JPG 2048 × 2048 or smaller.
 
 ## Before each show
 
-1. Collect each contestant's photos or scans and the true story behind each one.
-2. Name the files by slot and upload them here (drag and drop on github.com works).
-3. Wait a few minutes for GitHub Pages to update. You can watch the Actions tab.
-4. In the world, open the **Exhibit A** tab on the host terminal and add one line per exhibit:
+1. Add each exhibit with the script (or upload plain files for shareable models).
+2. Wait a minute or two for GitHub Pages to update.
+3. In the world, open the **Exhibit A** tab on the host terminal and add one line per exhibit:
 
    ```
    Shiro | 3 | Grandad's pocket watch, carried it through the war
@@ -38,20 +55,8 @@ There are 24 slots. Each slot can have a 3D model, a photo, or both:
    ```
 
    That's owner name (as their VRChat display name), slot number, then the true story (only the host and the owner see it).
-5. Press **PREVIEW NEXT EXHIBIT** on the terminal to check each one loads, then **STOP**.
+4. Press **PREVIEW NEXT EXHIBIT** on the terminal to check each one loads, then **STOP**.
 
-## Making a model
+## Making a model from a real object
 
-**Scan a real object with a phone.** For example, use **Scaniverse** (free, iOS/Android):
-
-- Scan the object, then Share/Export → **OBJ**, at the lowest detail option.
-- You'll get a model file and a texture image. Rename them to `exhibitNN.obj` and `exhibitNN.jpg`.
-
-**Clean it up in Blender** (if it's too detailed, or it's an FBX/GLB):
-
-1. File → Import the model.
-2. Select it. Add Modifier → **Decimate**, then lower the Ratio until the triangle count (shown in the status bar) is under 20,000. Apply it.
-3. File → Export → **Wavefront (.obj)**. Tick *Selection Only* and *UV Coordinates*. You can untick *Materials* and *Normals*.
-4. Export the texture as JPG, 2048 px or smaller.
-
-Models are automatically centred, scaled to about 2.2 m and stood upright on the projector, so size doesn't matter. "Up" should be +Y, which is the Blender OBJ export default.
+Scan it with a phone app such as **Scaniverse** (free, iOS/Android), export as OBJ or GLB, and run it through the script.
